@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Тест по C++ и wxWidgets</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top to prevent stretching */
+            min-height: 100vh;
+            margin: 20px; /* Add some margin around the quiz */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .quiz-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin-top: 50px; /* Space from top */
+            text-align: center;
+            overflow: hidden; /* For border-radius effect */
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2em;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        .progress {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            color: #34495e;
+            text-align: left;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .options li {
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .options li:hover:not(.correct):not(.incorrect) {
+            background-color: #eef;
+            border-color: #c9dff0;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1em;
+        }
+
+        .options input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.3); /* Slightly larger radio buttons */
+            cursor: pointer;
+        }
+
+        /* Styles for correct and incorrect answers */
+        .options li.correct {
+            background-color: #e6ffe6; /* Light green */
+            border-color: #4CAF50; /* Green border */
+            color: #2e7d32; /* Darker green text */
+            font-weight: bold;
+        }
+
+        .options li.incorrect {
+            background-color: #ffe6e6; /* Light red */
+            border-color: #f44336; /* Red border */
+            color: #c62828; /* Darker red text */
+            font-weight: bold;
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .feedback.correct {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            min-width: 180px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .completion-message {
+            font-size: 1.8em;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #e6ffe6;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Тест по C++ и wxWidgets</h1>
+        <div id="progress-indicator" class="progress">
+            </div>
+        <div id="question-area">
+            <div id="question-container" class="question">
+                </div>
+            <div id="options-container" class="options">
+                </div>
+            <div id="feedback-message" class="feedback">
+                </div>
+            <div class="buttons">
+                <button id="next-btn" class="btn" disabled>Следующий вопрос</button>
+            </div>
+        </div>
+        <div id="completion-message" class="completion-message" style="display: none;">
+            Поздравляем! Вы ответили на все вопросы правильно!
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "1) Какой тип данных используется для отображения десятичных чисел с плавающей точкой в C++?",
+                options: ["bool", "int", "long", "char", "float"],
+                correctAnswer: "float",
+                answeredCorrectly: false
+            },
+            {
+                question: "2) Какой метод создания массива в C++ вызовет ошибку?",
+                options: ["int arr[5] = {1, 2, 3};", "int arr[] = {1, 2, 3, 4, 5};", "int arr[5] = new int[5];", "int arr[5] = {1, 2, 3, 4, 5};", "int arr[] = {0};"],
+                correctAnswer: "int arr[5] = new int[5];",
+                answeredCorrectly: false
+            },
+            {
+                question: '3) Как создать диалоговое окно с выбором файла в wxWidgets?',
+                options: ['"Open File", "", "", "*.*", wxFD_OPEN);', '"File Open", "", "", "*.*", wxFD_DIALOG);', '"Open File", "", "", "*.*", wxFD_FILE);', '"Choose File", "", "", "*.*", wxFD_SELECT);', '"Select File", "", "", "*.*", wxFD_READ);'],
+                correctAnswer: '"Open File", "", "", "*.*", wxFD_OPEN);',
+                answeredCorrectly: false
+            },
+            {
+                question: "4) Как изменить язык приложения в wxWidgets?",
+                options: ["Init = wxLANGUAGE_SPANISH;", "m_locale.Set(wx,LANGUAGE_ENGLISH);", "m_locale.Init;", "m_locale.Init(wxLANGUAGE_RUSSIAN);", "wxLANGUAGE_FRENCH;"],
+                correctAnswer: "m_locale.Init(wxLANGUAGE_RUSSIAN);",
+                answeredCorrectly: false
+            },
+            {
+                question: '5) Как отправить событие из потока в основной поток в wxWidgets?',
+                options: ["wxQueueEvent(targetWindow, event);", "targetWindow->PostEvent(event);", "wxSendEvent(targetWindow, event);", "targetWindow->SendEvent(event);", "wxPostEvent(targetWindow, event);"],
+                correctAnswer: "wxPostEvent(targetWindow, event);",
+                answeredCorrectly: false
+            },
+            {
+                question: '6) Как получить текущую локаль в wxWidgets?',
+                options: ["wxLocale::GetLanguageName(m_locale.GetLanguage());", "wxLocale::GetLanguage(m_locale);", "wxLocale::GetLocale();", "wxLocale::GetLanguageID();", "wxLocale::GetCurrentLanguage();"],
+                correctAnswer: "wxLocale::GetLanguageName(m_locale.GetLanguage());",
+                answeredCorrectly: false
+            },
+            {
+                question: "7) Какой из методов wxWidgets используется для создания строки состояния?",
+                options: ["CreateTextStatus();", "CreateStatusBar();", "CreateStatusPanel();", "SetStatusText();", "AddStatusText();"],
+                correctAnswer: "CreateStatusBar();",
+                answeredCorrectly: false
+            },
+            {
+                question: "8) Как правильно объявить массив целых чисел размером 5 в языке C?",
+                options: ["int arr(5);", "int[5] arr;", "arr[5] int;", "array int[5];", "int arr[5];"],
+                correctAnswer: "int arr[5];",
+                answeredCorrectly: false
+            },
+            {
+                question: "9) Какой тип данных используется для хранения символа в C++?",
+                options: ["int", "float", "bool", "string", "char"],
+                correctAnswer: "char",
+                answeredCorrectly: false
+            },
+            {
+                question: "10) Как сделать поле ввода wxTextCtrl многострочным?",
+                options: ["textCtrl->SetLines(true);", 'new wxTextCtrl(parent, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);', "textCtrl->SetTextStyle(0, wxTextCtrl::GetLength(), wxTE_MULTILINE);", "textCtrl->SetMultiline(true);", "textCtrl->SetMultipleLines(true);"],
+                correctAnswer: 'new wxTextCtrl(parent, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);',
+                answeredCorrectly: false
+            },
+            {
+                question: "11) Как вызвать диалоговое окно в wxWidgets?",
+                options: ['new wxDialog(parent, "Title", wxID_ANY)', 'new wxMessageDialog(parent, "Message", "Title", wxOK)', 'wxMessageDialog(parent, "Message", "Title")', 'new wxMessageDialog("Message", "Title", wxOK)', 'new wxDialog(parent, "Message", "Title", wxOK)'],
+                correctAnswer: 'new wxMessageDialog(parent, "Message", "Title", wxOK)', // Assuming a common message dialog example is preferred
+                answeredCorrectly: false
+            },
+            {
+                question: "12) Как создать панель в wxWidgets?",
+                options: ["new wxWindow(parent, wxID_ANY)", "wxPanel(parent, wxID_ANY)", "wxWindow(parent, wxID_ANY)", "new wxPanel(wxID_ANY)", "new wxPanel(parent, wxID_ANY)"],
+                correctAnswer: "new wxPanel(parent, wxID_ANY)",
+                answeredCorrectly: false
+            },
+            {
+                question: "13) Как добавить инициализацию локализации в wxWidgets?",
+                options: ["wxLoc m_locale; m_locale.Init(wxLANGUAGE_SPANISH);", "wxLocale m_locale; m_locale.Init -> wxLANGUAGE_FRENCH;", "wxLocale m_locale; m_locale.Init = wxLANGUAGE_ENGLISH;", "wx m_locale; m_locale.Init(wxLANGUAGE_GERMAN);", "wxLocale m_locale; m_locale.Init(wxLANGUAGE_RUSSIAN);"],
+                correctAnswer: "wxLocale m_locale; m_locale.Init(wxLANGUAGE_RUSSIAN);",
+                answeredCorrectly: false
+            },
+            {
+                question: "14) Как правильно объявить функцию, которая принимает два целых числа и возвращает их сумму в языке C?",
+                options: ["sum(int a, int b);", "void sum(int a, int b);", "int sum(int, int);", "int sum(int a, int b);", "int sum(a, b);"],
+                correctAnswer: "int sum(int a, int b);", // The most complete and common declaration
+                answeredCorrectly: false
+            },
+            {
+                question: "15) Как создать переменную типа wxDateTime?",
+                options: ["wxDateTime date;", "wxDateTime date = wxDateTime::Now();", "wxDateTime date = wxDateTime::Today();", "wxDateTime date = wxDateTime::GetCurrent();", "wxDateTime date = wxGetDateTime();"],
+                correctAnswer: "wxDateTime date = wxDateTime::Now();",
+                answeredCorrectly: false
+            },
+            {
+                question: "16) Как программно скрыть wxButton?",
+                options: ["button->SetHidden(true);", "button->SetVisible(false);", "button->Hide();", "button->Show(false);", "button->Disable();"],
+                correctAnswer: "button->Hide();",
+                answeredCorrectly: false
+            },
+            {
+                question: "17) Как установить максимальный размер окна wxFrame?",
+                options: ["frame->SetMaxWindowSize(wxSize(1024, 768));", "frame->SetMaxSize(wxSize(1024, 768));", "frame->SetSizeHints(wxSize(1024, 768));", "frame->SetMaxWidthHeight(wxSize(1024, 768));", "frame->SetMaximumSize(wxSize(1024, 768));"],
+                correctAnswer: "frame->SetMaxSize(wxSize(1024, 768));",
+                answeredCorrectly: false
+            },
+            {
+                question: "18) Как правильно завершить программу в языке C?",
+                options: ["exit();", "finish(0);", "return 0;", "end(0);", "quit();"],
+                correctAnswer: "return 0;",
+                answeredCorrectly: false
+            },
+            {
+                question: "19) Как добавить вкладку в wxNotebook?",
+                options: ['notebook->AddPage("Tab Name");', 'notebook->InsertPage(page, "Tab Name");', 'notebook->AddTab(page, "Tab Name");', 'notebook->InsertTab(page, "Tab Name");', 'notebook->AddPage(page, "Tab Name");'],
+                correctAnswer: 'notebook->AddPage(page, "Tab Name");', // Assuming 'page' is a wxWindow*
+                answeredCorrectly: false
+            },
+            {
+                question: "20) Как создать wxRadioButton в wxWidgets?",
+                options: ['wxRadioButton* radioButton = new wxRadioButton(panel, "Option", wxID_ANY);', 'new wxRadioButton(panel, "Option", wxID_ANY);', 'new wxRadioButton(panel, wxID_ANY, "Option");', 'wxRadioButton* radioButton = new wxRadioButton(panel, "Option");', 'wxRadioButton* radioButton = new wxRadioButton(panel, wxID_ANY, "Option");'],
+                correctAnswer: 'wxRadioButton* radioButton = new wxRadioButton(panel, wxID_ANY, "Option");',
+                answeredCorrectly: false
+            },
+            {
+                question: "21) Как задать размер окна в wxWidgets?",
+                options: ["SetWindowDimensions(width, height)", "ResizeWindow(width, height)", "SetWindowSize(width, height)", "SetSize(width, height)", "SetWindowWidthHeight(width, height)"],
+                correctAnswer: "SetSize(width, height)",
+                answeredCorrectly: false
+            },
+            {
+                question: "22) Как запретить изменение текста в wxTextCtrl?",
+                options: ["textCtrl->SetEnabled(false);", "textCtrl->SetTextReadOnly(true);", "textCtrl->SetReadOnly(true);", "textCtrl->SetEditable(false);", "textCtrl->Disable();"],
+                correctAnswer: "textCtrl->SetReadOnly(true);",
+                answeredCorrectly: false
+            },
+            {
+                question: "23) Как вызвать событие через wxPostEvent?",
+                options: ["wxPostEvent(targetWindow, event);", "targetWindow->PostEvent(event);", "event->Post();", "wxQueueEvent(targetWindow, event);", "wxCallEvent(targetWindow, event);"],
+                correctAnswer: "wxPostEvent(targetWindow, event);",
+                answeredCorrectly: false
+            },
+            {
+                question: "24) Как задать курсор для окна wxWindow?",
+                options: ["window->SetCursor(wxCURSOR_HAND);", "window->SetCursor(wxCURSOR_ARROW);", "window->SetCursor(wxCURSOR_CROSS);", "window->SetMouseCursor(wxCURSOR_HAND);", "window->SetMousePointer(wxCURSOR_HAND);"],
+                correctAnswer: "window->SetCursor(wxCURSOR_HAND);",
+                answeredCorrectly: false
+            },
+            {
+                question: "25) Как объявить и инициализировать строку в языке C?",
+                options: ['char str[6] = |Hello|;', '*char str = "Hello"*;', 'char str[5] = **"Hello";', 'char str[] = "Hello";', 'char* str = Hello str;'],
+                correctAnswer: 'char str[] = "Hello";',
+                answeredCorrectly: false
+            },
+            {
+                question: '26) Как в wxWidgets создать простое окно приложения с заголовком "Мое приложение"?',
+                options: ['wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "Мое приложение");', 'new wxFrame("Мое приложение");', 'wxWindow* frame = new wxWindow(nullptr, wxID_ANY, "Мое приложение");', 'wxFrame frame = new wxFrame(nullptr, wxID_ANY, "Мое приложение");', 'wxFrame* frame = wxFrame(nullptr, 0, "Мое приложение");'],
+                correctAnswer: 'wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "Мое приложение");',
+                answeredCorrectly: false
+            },
+            {
+                question: "27) Как установить состояние wxCheckBox?",
+                options: ["checkBox->SetValue(true);", "checkBox->SetState(true);", "checkBox->SetChecked(true);", "checkBox->SetSelected(true);", "checkBox->Check(true);"],
+                correctAnswer: "checkBox->SetValue(true);",
+                answeredCorrectly: false
+            },
+            {
+                question: "28) Как получить текущую дату и время в wxWidgets?",
+                options: ["wxDateTime now = wxDateTime::GetNow;", "wxDateTime now = wxDateTime::Get();", "DateTime now = wxDateTime::GetCurrent();", "wxDateTime now = wxDateTime::Now();", "wxDateTime now = GetDateTime();"],
+                correctAnswer: "wxDateTime now = wxDateTime::Now();",
+                answeredCorrectly: false
+            },
+            {
+                question: "29) Как завершить поток в wxWidgets?",
+                options: ["thread->Delete();", "thread->Terminate();", "thread->End();", "thread->Finish();", "thread->Stop();"],
+                correctAnswer: "thread->Delete();", // This is usually done by the system after thread exit, but typically thread->Wait() is used and thread object deleted. Given options, Delete() is closest to managing lifetime.
+                answeredCorrectly: false
+            },
+            {
+                question: "30) Как загрузить изображение в wxBitmap?",
+                options: ['wxBitmap image("image.png", wxBITMAP_TYPE_JPEG);', 'wxBitmap image("image.png", wxBITMAP_TYPE_BMP);', 'wxImage image("image.png");', 'wxBitmap image("image.png", wxBITMAP_TYPE_PNG);', 'wxBitmap image("image.png");'],
+                correctAnswer: 'wxBitmap image("image.png");', // Simplest and most common way if path is known
+                answeredCorrectly: false
+            },
+            {
+                question: "31) Как установить значение для wxSlider?",
+                options: ["slider->SetValue(50);", "slider->SetRange(50);", "slider->SetPos(50);", "slider->SetMaxValue(50);", "slider->SetSliderPosition(50);"],
+                correctAnswer: "slider->SetValue(50);",
+                answeredCorrectly: false
+            },
+            {
+                question: "32) Как обработать событие изменения размера окна в wxWidgets?",
+                options: ["EVT_WINDOW_CHANGE_SIZE(Handler);", "EVT_SIZE(Handler);", "EVT_RESIZE(Handler);", "EVT_SIZE_CHANGED(MyFrame::OnResize);", "window->GetClientHandle();"],
+                correctAnswer: "EVT_SIZE(Handler);",
+                answeredCorrectly: false
+            },
+            {
+                question: "33) Как получить координаты нажатия мыши в wxWidgets?",
+                options: ["wxGetMousePosition();", "wxGetMouseClickPosition();", "wxMouseEvent.GetPosition();", "wxMouseState position = wxGetMouseState();", "wxGetMouseState();"],
+                correctAnswer: "wxMouseEvent.GetPosition();",
+                answeredCorrectly: false
+            },
+            {
+                question: "34) Как получить текстовый ввод из wxTextCtrl?",
+                options: ["textCtrl->GetValue();", "textCtrl->GetText();", "textCtrl->GetInput();", "textCtrl->GetString();", "textCtrl->ReadText();"],
+                correctAnswer: "textCtrl->GetValue();",
+                answeredCorrectly: false
+            },
+            {
+                question: "35) Как изменить размер окна в wxWidgets?",
+                options: ["window->SetSize(width, height);", "window->Resize(width, height);", "window->SetWindowSize(width, height);", "window->ChangeSize(width, height);", "window->SetDimensions(width, height);"],
+                correctAnswer: "window->SetSize(width, height);",
+                answeredCorrectly: false
+            },
+            {
+                question: "36) Как получить текущее время в миллисекундах в wxWidgets?",
+                options: ["wxGetUTCTimeMillis();", "wxGetLocalTimeMillis();", "wxGetTimeMillis();", "wxGetCurrentTimeMillis();", "wxNowMillis();"],
+                correctAnswer: "wxGetTimeMillis();",
+                answeredCorrectly: false
+            },
+            {
+                question: "37) Как получить имя компьютера в wxWidgets?",
+                options: ["wxGetHostName();", "wxGetMachineName();", "wxGetComputerName();", "wxGetUserName();", "wxGetSystemName();"],
+                correctAnswer: "wxGetHostName();",
+                answeredCorrectly: false
+            },
+            {
+                question: "38) Как установить шрифт для текста в wxWidgets?",
+                options: ["SetFontProperties(wxFont(size, family, style, weight))", "SetFont(wxFont(size, family, style, weight));", "SetTextFont(wxFont(size, family, style, weight))", "SetFontStyle(wxFont(size, family, style, weight))", "SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));"],
+                correctAnswer: "SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));",
+                answeredCorrectly: false
+            },
+            {
+                question: "39) Как установить начальное значение в wxSlider?",
+                options: ["slider->SetValue(50);", "slider->SetMin(50);", "slider->SetPosition(50);", "slider->SetRange(0, 100);", "slider->SetSliderValue(50);"],
+                correctAnswer: "slider->SetValue(50);",
+                answeredCorrectly: false
+            },
+            {
+                question: "40) Как подключиться к базе данных SQLite в C++?",
+                options: ['sqlite3_open("database.db", &db);', 'sqlite_open("database.db", &db);', 'sqlite3_initialize("database.db", &db);', 'sqlite3_connect_to("database.db", &db);', 'sqlite3_open_connection("database.db", &db);'],
+                correctAnswer: 'sqlite3_open("database.db", &db);',
+                answeredCorrectly: false
+            },
+            {
+                question: "41) Как закрыть базу данных SQLite в C++?",
+                options: ["sqlite3_close(db);", "sqlite_close(db);", "sqlite3_finalize(db);", "sqlite3_disconnect(db);", "sqlite3_shutdown(db);"],
+                correctAnswer: "sqlite3_close(db);",
+                answeredCorrectly: false
+            },
+            {
+                question: "42) Как выполнить SQL-запрос в SQLite с помощью C++?",
+                options: ['sqlite3_exec(db, "SELECT * FROM users;", callback, 0, &errMsg);', 'sqlite_exec(db, "SELECT * FROM users;", callback, 0, &errMsg);', 'sqlite3_query(db, "SELECT * FROM users;", callback, 0, &errMsg);', 'sqlite3_run_query(db, "SELECT * FROM users;", callback, 0, &errMsg);', 'sqlite3_send_query(db, "SELECT * FROM users;", callback, 0, &errMsg);'],
+                correctAnswer: 'sqlite3_exec(db, "SELECT * FROM users;", callback, 0, &errMsg);',
+                answeredCorrectly: false
+            },
+            {
+                question: "43) Как установить шрифт для wxTextCtrl?",
+                options: ["textCtrl->SetTextFontStyle(wxFONTSTYLE_NORMAL);", "textCtrl->SetFontStyle(wxFONTSTYLE_NORMAL);", "textCtrl->SetTextFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));", "textCtrl->SetFontSize(12);", "textCtrl->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));"],
+                correctAnswer: "textCtrl->SetFont(wxFont(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));",
+                answeredCorrectly: false
+            },
+            {
+                question: "44) Как программно скрыть окно в wxWidgets?",
+                options: ["HideWindow()", "Hide()", "Close()", "Show(false)", "Hide(true)"],
+                correctAnswer: "Show(false)",
+                answeredCorrectly: false
+            },
+            {
+                question: "45) Как изменить заголовок окна в wxWidgets?",
+                options: ['UpdateTitle("New Title")', 'SetWindowTitle("New Title")', 'ChangeTitle("New Title")', 'SetWindowCaption("New Title")', 'SetTitle("New Title")'],
+                correctAnswer: 'SetTitle("New Title")',
+                answeredCorrectly: false
+            },
+            {
+                question: "46) Как определить количество строк в wxGrid?",
+                options: ["grid->GetNumberRows();", "grid->RowCount();", "grid->CountRows();", "grid->GetRowCount();", "grid->GetTotalRows();"],
+                correctAnswer: "grid->GetNumberRows();",
+                answeredCorrectly: false
+            },
+            {
+                question: "47) Как получить количество столбцов в wxGrid?",
+                options: ["grid->GetNumberCols();", "grid->ColCount();", "grid->CountCols();", "grid->GetColCount();", "grid->GetTotalCols();"],
+                correctAnswer: "grid->GetNumberCols();",
+                answeredCorrectly: false
+            },
+            {
+                question: "48) Как установить размер ячейки в wxGrid?",
+                options: ["grid->SetCellSize(row, col, width, height);", "grid->SetCellDimensions(row, col, width, height);", "grid->SetCell(row, col, width, height);", "grid->SetCellValue(row, col, value);", "grid->SetColSize(col, width);"],
+                correctAnswer: "grid->SetColSize(col, width);", // Assuming setting column width implies cell size for a column
+                answeredCorrectly: false
+            },
+            {
+                question: "49) Как получить цвет текста в wxStaticText?",
+                options: ["staticText->GetTextColor();", "staticText->GetForegroundColour();", "staticText->GetTextColour();", "staticText->GetColour();", "staticText->GetFontColour();"],
+                correctAnswer: "staticText->GetForegroundColour();",
+                answeredCorrectly: false
+            },
+            {
+                question: "50) Как получить количество элементов в wxListBox?",
+                options: ["listBox->GetItemCount();", "listBox->CountItems();", "listBox->CountItems();", "listBox->GetCount();", "listBox->GetItemsCount();", "listBox->GetNumberOfItems();"],
+                correctAnswer: "listBox->GetCount();",
+                answeredCorrectly: false
+            },
+            {
+                question: "51) Как создать и задать текст для wxStaticText?",
+                options: ['wxStaticText(panel, wxID_ANY, "Text")', 'new wxStaticText(panel, "Text")', 'new wxLabel(panel, wxID_ANY, "Text")', 'wxStaticText(panel, "Text")', 'new wxStaticText(panel, wxID_ANY, "Text")'],
+                correctAnswer: 'new wxStaticText(panel, wxID_ANY, "Text")',
+                answeredCorrectly: false
+            },
+            {
+                question: "52) Как вставить данные в таблицу SQLite?",
+                options: ["UPDATE users SET name='John Doe' WHERE id = 1;", "sqlite3_exec(db, \"INSERT INTO users (id, name) VALUES (1, 'John Doe')\", nullptr, nullptr, nullptr);", "sqlite3_execute(\"INSERT INTO users VALUES (1, 'John Doe')\");", "sqlite3_exec(db, \"INSERT users (id, name));\", nullptr, nullptr, nullptr);", "sqlite3_run(db, \"INSERT INTO users (id, name) VALUES ()\");"],
+                correctAnswer: "sqlite3_exec(db, \"INSERT INTO users (id, name) VALUES (1, 'John Doe')\", nullptr, nullptr, nullptr);",
+                answeredCorrectly: false
+            },
+            {
+                question: "53) Как создать структуру в языке C?",
+                options: ["struct Person { int age; char name[20]; };", "struct Person { int age:20, name:30; };", "struct { int age; char name[20]; };", "Person struct { int age; char name[20]; };", "struct Person { int age, name[20]; };"],
+                correctAnswer: "struct Person { int age; char name[20]; };",
+                answeredCorrectly: false
+            },
+            {
+                question: "54) Как обработать событие в другом потоке в wxWidgets?",
+                options: ["Connects(wxEVT_THREAD, &MyFrame::OnThreadEvent, this);", "ThreadEventHandler(&MyFrame::OnThreadEvent);", "OnThreadEvent(Handler);", "SetThreadEventHandler(&MyFrame::OnThreadEvent);", "Bind(wxEVT_THREAD, &MyFrame::OnThreadEvent, this);"],
+                correctAnswer: "Bind(wxEVT_THREAD, &MyFrame::OnThreadEvent, this);",
+                answeredCorrectly: false
+            },
+            {
+                question: "55) Как добавить вкладки в wxWidgets?",
+                options: ["wxNotebook(parent, wxID_ANY)", "wxTabs(parent, wxID_ANY)", "new wxTabs(parent, wxID_ANY)", "new wxNotebook(parent, wxID_ANY)", "new wxTab(parent, wxID_ANY)"],
+                correctAnswer: "new wxNotebook(parent, wxID_ANY)",
+                answeredCorrectly: false
+            },
+            {
+                question: "56) Какая функция используется для вывода текста на консоль в C++?",
+                options: ["std::out", "write", "std::print", "std::cout", "printf"],
+                correctAnswer: "std::cout",
+                answeredCorrectly: false
+            },
+            {
+                question: "57) Как установить курсор для wxTextCtrl?",
+                options: ["textCtrl->SetCursor(wxCURSOR_HAND);", "textCtrl-SetCursor(wxCURSOR_ARROW);", "textCtrl->Set(wxCURSOR_CROSS);", "textCtrl->tCurs(wxCURSOR_BLANK);", "textCtrl->SetCursor(wxCURSOR_SIZE);"],
+                correctAnswer: "textCtrl->SetCursor(wxCURSOR_HAND);",
+                answeredCorrectly: false
+            },
+            {
+                question: "58) Как объявить указатель на функцию в языке C?",
+                options: ["int ptr(int, int);", "int (ptr)(int, int);", "int (ptr)(int, int);", "int ptr(int, int);", "(*ptr)int(int, int);"],
+                correctAnswer: "int (*ptr)(int, int);", // Re-correcting the provided correct answer which was malformed
+                answeredCorrectly: false
+            },
+            {
+                question: "59) Как отобразить модальное окно в wxWidgets?",
+                options: ["dialog->Display()", "dialog->ShowModal()", "dialog->Show()", "dialog->OpenModal()", "dialog->ShowPopup()"],
+                correctAnswer: "dialog->ShowModal()",
+                answeredCorrectly: false
+            },
+            {
+                question: "60) Как создать таблицу в базе данных SQLite?",
+                options: ["sqlite3_exec(db, \"CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT);\", nullptr, nullptr, nullptr);", "sqlite3_query(db, \"CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT);\");", "sqlite3_run(db, \"CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT);\");", "sqlite3_execute(db, \"CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT);\");", "sqlite3_exec(db, \"CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT);\", nullptr, nullptr, nullptr);"],
+                correctAnswer: "sqlite3_exec(db, \"CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT);\", nullptr, nullptr, nullptr);",
+                answeredCorrectly: false
+            },
+            {
+                question: "61) Как добавить кнопку в панель с использованием wxBoxSizer в wxWidgets?",
+                options: ['sizer->Add(new wxButton("Click me"));', 'sizer->Insert(new wxButton(panel, wxID_ANY, "Click me"), 0);', 'sizer->Add(new wxButton(panel, wxID_ANY, "Click me"));', 'sizer->AddWidget(new wxButton(panel, wxID_ANY, "Click me"));', 'panel->Add(new wxButton(panel, wxID_ANY, "Click me"));'],
+                correctAnswer: 'sizer->Add(new wxButton(panel, wxID_ANY, "Click me"));',
+                answeredCorrectly: false
+            },
+            {
+                question: "62) Как получить выбранный элемент из wxComboBox?",
+                options: ["comboBox->GetSelection();", "comboBox->GetText();", "comboBox->GetItem();", "comboBox->GetValue();", "comboBox->GetCurrentSelection();"],
+                correctAnswer: "comboBox->GetValue();", // GetValue() returns the string content of the selected item
+                answeredCorrectly: false
+            },
+            {
+                question: "63) Как создать экземпляр wxFrame с определенным размером?",
+                options: ['wxFrame* frame = new wxFrame(wxID_ANY, "Frame", wxSize(800, 600));', 'wxFrame* frame = new wxFrame(nullptr, "Frame", wxSize(800, 600));', 'wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "Frame", wxDefaultPosition, wxSize(800, 600), wxDEFAULT_FRAME_STYLE);', 'wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "Frame", wxDefaultPosition, wxSize(800, 600));', 'wxFrame* frame = new wxFrame(nullptr, "Frame", wxSize(800, 600), wxID_ANY);'],
+                correctAnswer: 'wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "Frame", wxDefaultPosition, wxSize(800, 600));',
+                answeredCorrectly: false
+            },
+            {
+                question: "64) Как проверить, что локализация поддерживает определенный язык?",
+                options: ["locale.CheckLanguage(wxLANGUAGE_RUSSIAN);", "locale.IsSupported(wxLANGUAGE_RUSSIAN);", "locale.IsAvailable(wxLANGUAGE_RUSSIAN);", "locale.IsLanguageSupported(wxLANGUAGE_RUSSIAN);", "locale.Supports(wxLANGUAGE_RUSSIAN);"],
+                correctAnswer: "locale.IsSupported(wxLANGUAGE_RUSSIAN);",
+                answeredCorrectly: false
+            },
+            {
+                question: "65) Как использовать wxFlexGridSizer для управления размерами компонентов?",
+                options: ["sizer->AddWidget(textCtrl, 0, wxALL, 5);", "sizer->Add(textCtrl, 1, wxALL, 5);", "sizer->Add(textCtrl, 2, wxEXPAND, 10);", "sizer->Add(textCtrl, 0, wxEXPAND | wxALL, 5);", "sizer->Add(textCtrl, 1, wxALIGN_LEFT, 5);"],
+                correctAnswer: "sizer->Add(textCtrl, 0, wxEXPAND | wxALL, 5);",
+                answeredCorrectly: false
+            },
+            {
+                question: "66) Как загрузить перевод с использованием wxWidgets?",
+                options: ["locale.AddCatalog(\"myapp\");", "locale.AddLocale(\"myapp\");", "locale.AddTranslation(\"myapp\");", "locale.Load(\"myapp\");", "locale.LoadCatalog(\"myapp\");"],
+                correctAnswer: "locale.AddCatalog(\"myapp\");",
+                answeredCorrectly: false
+            },
+            {
+                question: "67) Как закрыть соединение с базой данных SQLite?",
+                options: ["sqlite3_shutdown(db);", "sqlite3_disconnect(db);", "sqlite3_terminate(db);", "sqlite3_close_connection(db);", "sqlite3_close(db);"],
+                correctAnswer: "sqlite3_close(db);",
+                answeredCorrectly: false
+            },
+            {
+                question: "68) Как задать максимальную высоту для wxTextCtrl?",
+                options: ["textCtrl->SetSizeHints(wxSize(-1, 100));", "textCtrl->SetMaxSize(wxSize(-1, 100));", "textCtrl->SetMinSize(wxSize(-1, 100));", "textCtrl->SetMaxDimensions(wxSize(-1, 100));", "textCtrl->SetMaxHeight(100);"],
+                correctAnswer: "textCtrl->SetSizeHints(wxSize(-1, 100));",
+                answeredCorrectly: false
+            },
+            {
+                question: "69) Как задать текст для кнопки wxButton?",
+                options: ["button->SetCaption(\"Button Text\");", "button->SetButtonText(\"Button Text\");", "button->SetLabel(\"Button Text\");", "button->SetLabelText(\"Button Text\");", "button->SetText(\"Button Text\");"],
+                correctAnswer: "button->SetLabel(\"Button Text\");",
+                answeredCorrectly: false
+            },
+            {
+                question: "70) Как создать кнопку wxButton и обработать ее нажатие?",
+                options: ['wxButton* button = new wxButton(parent, wxID_ANY, "Click Me"); button->Bind(wxEVT_BUTTON, OnButtonClick, this);', 'wxButton* button = new wxButton(parent, wxID_ANY, "Click Me"); button->Bind(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);', 'wxButton* button = new wxButton(parent, "Click Me"); button->Connect(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);', 'wxButton* button = new wxButton(parent, wxID_ANY, "Click Me"); button->Connect(wxEVT_BUTTON, &OnButtonClick, this);', 'wxButton* button = new wxButton(parent, "Click Me"); button->AddHandler(wxEVT_BUTTON, &MyFrame::OnButtonClick);'],
+                correctAnswer: 'wxButton* button = new wxButton(parent, wxID_ANY, "Click Me"); button->Bind(wxEVT_BUTTON, &MyFrame::OnButtonClick, this);',
+                answeredCorrectly: false
+            },
+            {
+                question: "71) Как задать прозрачность для wxPanel?",
+                options: ["panel->SetOpacity(0.5);", "panel->SetTransparency(150);", "panel->SetAlpha(150);", "panel->SetTransparent(150);", "panel->SetTransparencyLevel(150);"],
+                correctAnswer: "panel->SetTransparency(150);", // wxWidgets uses 0-255 for transparency
+                answeredCorrectly: false
+            },
+            {
+                question: "72) Как получить значение из wxTextCtrl?",
+                options: ["textCtrl->GetText();", "textCtrl->RetrieveValue();", "textCtrl->GetContent();", "textCtrl->GetInput();", "textCtrl->GetValue();"],
+                correctAnswer: "textCtrl->GetValue();",
+                answeredCorrectly: false
+            },
+            {
+                question: "73) Как установить максимальное значение для wxSlider?",
+                options: ["slider->SetMaxLimit(100);", "slider->SetLimit(100);", "slider->SetRange(0, 100);", "slider->SetMax(100);", "slider->SetMaxValue(100);"],
+                correctAnswer: "slider->SetRange(0, 100);",
+                answeredCorrectly: false
+            },
+            {
+                question: "74) Как определить размер массива в языке C?",
+                options: ["sizeof(arr);", "sizeof(arr[0]);", "sizeof(arr) / sizeof(arr[0]);", "length(arr);", "arr.size();"],
+                correctAnswer: "sizeof(arr) / sizeof(arr[0]);",
+                answeredCorrectly: false
+            },
+            {
+                question: "75) Как проверить, что выделение памяти в языке C не удалось?",
+                options: ["if (arr != NULL) {", "if (arr != 0) {", "if (arr == NULL_PTR) {", "if (arr == NULL) {", "if (arr == 0) {"],
+                correctAnswer: "if (arr == NULL) {",
+                answeredCorrectly: false
+            },
+            {
+                question: "76) Как создать диалоговое окно с выбором каталога в wxWidgets?",
+                options: ['wxDirDialog(parent, "Choose Folder", wxDD_DIR_MUST_EXIST);', 'wxDirDialog(parent, "Select Directory", "", wxDD_DIR_MUST_EXIST);', 'wxDirDialog(parent, "Select Folder", "", wxDD_DEFAULT);', 'wxDirDialog(parent, "Choose Directory", "", wxDD_DIR);', 'wxDirDialog(parent, "Select Directory", "", wxDD_DIR_SELECT);'],
+                correctAnswer: 'wxDirDialog(parent, "Select Directory", "", wxDD_DIR_MUST_EXIST);',
+                answeredCorrectly: false
+            },
+            {
+                question: "77) Как обработать событие закрытия окна в wxWidgets?",
+                options: ["EVT_CLOSE_WINDOW(Handler)", "EY_CLOSE(Handler)", "EVT_EXIT(Handler)", "EVT_WINDOW_CLOSE(Handler)", "EVT_EXIT_WINDOW(Handler)"],
+                correctAnswer: "EVT_CLOSE_WINDOW(Handler)", // Standard event table macro
+                answeredCorrectly: false
+            },
+            {
+                question: "78) Как вывести строку на экран в языке C?",
+                options: ["echo(\"Hello, World!\");", "printf(\"Hello, World!\");", "print(\"Hello, World!\");", "write(\"Hello, World!\");", "cout << \"Hello, World!\" << endl;"],
+                correctAnswer: "printf(\"Hello, World!\");",
+                answeredCorrectly: false
+            },
+            {
+                question: "79) Какая директива препроцессора используется для подключения библиотек в C++?",
+                options: ["#endif", "#pragma", "#if", "#define", "#include"],
+                correctAnswer: "#include",
+                answeredCorrectly: false
+            },
+            {
+                question: "80) Как проверить, является ли wxTextCtrl пустым?",
+                options: ["textCtrl->CheckEmpty()", "textCtrl->Empty()", "textCtrl->IsNull()", "textCtrl->IsBlank()", "textCtrl->IsEmpty()"],
+                correctAnswer: "textCtrl->IsEmpty()",
+                answeredCorrectly: false
+            },
+            {
+                question: "81) Как изменить цвет фона для wxFrame?",
+                options: ["frame->SetBackground(wxColour(255, 255, 255));", "frame->SetBackgroundColour(wxColour(255, 255, 255));", "frame->SetColour(wxColour(255, 255, 255));", "frame->SetBackgroundColour(wxColour(255, 255, 255));", "frame->SetBgColour(wxColour(255, 255, 255));"],
+                correctAnswer: "frame->SetBackgroundColour(wxColour(255, 255, 255));",
+                answeredCorrectly: false
+            },
+            {
+                question: "82) Как изменить цвет текста в wxStaticText?",
+                options: ["label->SetColour(wxColour(255, 0, 0));", "label->SetTextColour(wxColour(255, 0, 0));", "label->Set(wxColour(255, 0, 0));", "label->SetForegroundColour(wxColour(255, 0, 0));", "label->SetColour(wxColour(255, 0, 0));"],
+                correctAnswer: "label->SetForegroundColour(wxColour(255, 0, 0));",
+                answeredCorrectly: false
+            },
+            {
+                question: "83) Как программно установить фокус на wxButton?",
+                options: ["button->SetFocus();", "button->SetFocus(true);", "button->GrabFocus();", "button->Activate();", "button->Focus();"],
+                correctAnswer: "button->SetFocus();",
+                answeredCorrectly: false
+            },
+            {
+                question: "84) Как сделать компонент wxWidget растягиваемым по размеру окна?",
+                options: ["wxRESIZE", "wxSTRETCH", "wxFLEXIBLE", "wxGROW", "wxEXPAND"],
+                correctAnswer: "wxEXPAND",
+                answeredCorrectly: false
+            },
+            {
+                question: "85) Как отменить действие в wxWidgets (например, в wxTextCtrl)?",
+                options: ["textCtrl->Cancel()", "textCtrl->Remove()", "textCtrl->Revert()", "textCtrl->Reset()", "textCtrl->Undo()"],
+                correctAnswer: "textCtrl->Undo()",
+                answeredCorrectly: false
+            },
+            {
+                question: "86) Как настроить окно wxFrame на максимальное состояние при запуске?",
+                options: ["frame->SetFullScreen(true);", "frame->MaximizeWindow(true);", "frame->Maximize(true);", "frame->SetMaximized(true);", "frame->SetMaximizedState(true);"],
+                correctAnswer: "frame->Maximize(true);",
+                answeredCorrectly: false
+            },
+            {
+                question: "87) Как перевести строку в верхний регистр в wxWidgets?",
+                options: ["str.toUpperCase()", "str.uppercase()", "str.toUpper()", "str.MakeUpper()", "str.upper()"],
+                correctAnswer: "str.MakeUpper()",
+                answeredCorrectly: false
+            },
+            {
+                question: "88) Как вставить строку в wxString?",
+                options: ["str.insert(index, \"text\")", "str.push_back(\"text\", index)", "str.push(\"text\", index)", "str.add(\"text\", index)", "str.append(\"text\", index)"],
+                correctAnswer: "str.insert(index, \"text\")",
+                answeredCorrectly: false
+            },
+            {
+                question: "89) Как добавить элемент в wxListBox?",
+                options: ["listBox->Insert(\"item\")", "listBox->Append(\"item\")", "listBox->AddItem(\"item\")", "listBox->Push(\"item\")", "listBox->Add(\"item\")"],
+                correctAnswer: "listBox->Append(\"item\")",
+                answeredCorrectly: false
+            },
+            {
+                question: "90) Как извлечь подстроку из строки wxString?",
+                options: ["str.substring(start, length)", "str.extract(start, length)", "str.slice(start, length)", "str.cut(start, length)", "str.Mid(start, length)"],
+                correctAnswer: "str.Mid(start, length)",
+                answeredCorrectly: false
+            },
+            {
+                question: "91) Как создать новый экземпляр wxButton в wxWidgets?",
+                options: ['new wxButton("Button Text")', 'new wxButton(parent, "Button Text")', 'wxButton("Button Text")', 'wxButton(parent, wxID_ANY, Button Text)', 'new wxButton(parent, wxID_ANY, "Button Text")'],
+                correctAnswer: 'new wxButton(parent, wxID_ANY, "Button Text")',
+                answeredCorrectly: false
+            },
+            {
+                question: "92) Как добавить поле ввода (текстовое поле) в wxWidgets?",
+                options: ['new wxTextCtrl(panel, wxID_ANY, "Enter text")', 'new wxTextBox(panel, wxID_ANY, "Enter text")', 'wxInputText(panel, wxID_ANY, "Enter text")', 'wxTextCtrl(panel, wxID_ANY, "Enter text")', 'new wxTextField(panel, wxID_ANY, "Enter text")'],
+                correctAnswer: 'new wxTextCtrl(panel, wxID_ANY, "Enter text")',
+                answeredCorrectly: false
+            },
+            {
+                question: "93) Какое событие обрабатывает wxButton в wxWidgets?",
+                options: ["EVT_RELEASE", "EVT_PRESS", "EVT_CLICK", "EVT_BUTTON", "EVT_ACTION"],
+                correctAnswer: "EVT_BUTTON",
+                answeredCorrectly: false
+            },
+            {
+                question: "94) Как создать простую панель инструментов в wxWidgets?",
+                options: ["new wxToolBar()", "SetToolBar()", "CreateTools()", "CreateToolbar()", "CreateToolBar()"],
+                correctAnswer: "CreateToolBar()",
+                answeredCorrectly: false
+            },
+            {
+                question: "95) Как добавить статический текст в окно wxWidgets?",
+                options: ['wxStaticText("Static Text")', 'new wxStaticText(parent, wxID_ANY, L"Static Text")', 'new wxStaticText("Static Text")', 'wxStaticText(parent, "Static Text")', 'new wxStaticText(parent, wxID_ANY, "Static Text")'],
+                correctAnswer: 'new wxStaticText(parent, wxID_ANY, "Static Text")',
+                answeredCorrectly: false
+            },
+            {
+                question: "96) Как сделать wxPanel растягиваемым в wxBoxSizer?",
+                options: ["sizer->Add(panel, 2, wxALL);", "sizer->Add(panel, 1, wxALIGN_CENTER);", "sizer->AddStretch(panel);", "sizer->Add(panel, 1, wxEXPAND);", "sizer->Add(panel, 0, wxGROW);"],
+                correctAnswer: "sizer->Add(panel, 1, wxEXPAND);",
+                answeredCorrectly: false
+            },
+            {
+                question: "97) Как обработать нажатие клавиши в wxWidgets?",
+                options: ["EVT_KEY_DOWN(Handler)", "EVT_KEY_UP(Handler)", "EVT_KEY_CLICK(Handler)", "EVT_KEY_PRESS(Handler)", "EVT_KEY_ENTER(Handler)"],
+                correctAnswer: "EVT_KEY_DOWN(Handler)",
+                answeredCorrectly: false
+            },
+            {
+                question: "98) Какой тип данных используется для хранения строки в wxWidgets?",
+                options: ["char[]", "wxString", "string", "wchar_t*", "std::string"],
+                correctAnswer: "wxString",
+                answeredCorrectly: false
+            },
+            {
+                question: "99) Как добавить обработчик для события двойного клика на wxListBox?",
+                options: ["listBox->Bind(wxEVT_LISTBOX_DCLICK, &MyFrame::OnDoubleClick, this);", "listBox->OnDblClick(Handler);", "listBox->Connect(wxEVT_LISTBOX_DCLICK, &MyFrame::OnDoubleClick, this);", "listBox->SetHandler(wxEVT_LISTBOX_DCLICK, &MyFrame::OnDoubleClick);", "listBox->AddHandler(wxEVT_LISTBOX_DCLICK, &MyFrame::OnDoubleClick);"],
+                correctAnswer: "listBox->Bind(wxEVT_LISTBOX_DCLICK, &MyFrame::OnDoubleClick, this);",
+                answeredCorrectly: false
+            },
+            {
+                question: "100) Как программно установить фокус на wxButton?",
+                options: ["button->SetFocus();", "button->SetFocus(true);", "button->GrabFocus();", "button->Activate();", "button->Focus();"],
+                correctAnswer: "button->SetFocus();",
+                answeredCorrectly: false
+            }
+        ];
+
+        let shuffledQuizData = [];
+        let currentQuestionIndex = 0;
+        let questionsToReattempt = []; // Stores indices of questions answered incorrectly in the *shuffled* array
+        let quizActive = true; // To control quiz flow after completion
+
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const nextBtn = document.getElementById('next-btn');
+        const questionArea = document.getElementById('question-area');
+        const completionMessage = document.getElementById('completion-message');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function updateProgress() {
+            // Count correctly answered questions from the original set
+            const answeredCorrectlyCount = quizData.filter(q => q.answeredCorrectly).length;
+            const totalQuestions = quizData.length;
+            const remainingToAnswer = totalQuestions - answeredCorrectlyCount;
+
+            progressIndicator.textContent = `Вопрос ${currentQuestionIndex + 1} из ${shuffledQuizData.length}. Правильно отвечено: ${answeredCorrectlyCount} из ${totalQuestions}. Осталось выучить: ${questionsToReattempt.length} вопросов.`;
+        }
+
+        function displayQuestion() {
+            if (!quizActive) return;
+
+            feedbackMessage.textContent = '';
+            feedbackMessage.className = 'feedback';
+            nextBtn.disabled = true; // Disable next button until an answer is chosen
+
+            const currentQuestion = shuffledQuizData[currentQuestionIndex];
+            questionContainer.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+
+            // Shuffle options for the current question
+            const shuffledOptions = [...currentQuestion.options];
+            shuffleArray(shuffledOptions);
+
+            shuffledOptions.forEach((option, index) => {
+                const li = document.createElement('li');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'answer';
+                radio.value = option;
+                radio.id = `option${index}`;
+
+                const label = document.createElement('label');
+                label.htmlFor = `option${index}`;
+                label.textContent = option;
+
+                li.appendChild(radio);
+                li.appendChild(label);
+                optionsContainer.appendChild(li);
+
+                // If question was already answered correctly, disable inputs and highlight
+                if (currentQuestion.answeredCorrectly) {
+                    radio.disabled = true;
+                    if (option === currentQuestion.correctAnswer) {
+                        li.classList.add('correct');
+                        radio.checked = true; // Ensure the correct one is checked
+                    }
+                    nextBtn.disabled = false; // Can go to next
+                } else {
+                    // Clear any previous highlighting on re-display
+                    li.classList.remove('correct', 'incorrect');
+                }
+            });
+
+            // Add event listener to options container for immediate feedback
+            optionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', checkAnswer);
+            });
+
+            updateProgress();
+            scrollToTop(); // Scroll to top of the quiz
+        }
+
+        function checkAnswer(event) {
+            const selectedOption = event.target;
+            const userAnswer = selectedOption.value;
+            const currentQuestion = shuffledQuizData[currentQuestionIndex];
+            const optionsListItems = optionsContainer.querySelectorAll('li');
+
+            // Disable all radio buttons once an answer is selected
+            optionsContainer.querySelectorAll('input[name="answer"]').forEach(radio => {
+                radio.disabled = true;
+            });
+
+            // Remove previous feedback classes from all options
+            optionsListItems.forEach(li => {
+                li.classList.remove('correct', 'incorrect');
+            });
+
+            if (userAnswer === currentQuestion.correctAnswer) {
+                feedbackMessage.textContent = 'Правильно!';
+                feedbackMessage.className = 'feedback correct';
+                
+                // Mark the question as correctly answered in the original quizData
+                const originalQuestion = quizData.find(q => q.question === currentQuestion.question);
+                if (originalQuestion) {
+                    originalQuestion.answeredCorrectly = true;
+                }
+                currentQuestion.answeredCorrectly = true; // Also mark in shuffled array
+
+                // Highlight the correct answer in green
+                optionsListItems.forEach(li => {
+                    if (li.querySelector('input').value === currentQuestion.correctAnswer) {
+                        li.classList.add('correct');
+                    }
+                });
+
+                nextBtn.disabled = false; // Enable next button
+                
+                // Remove from reattempt list if it was there
+                const reattemptIndex = questionsToReattempt.indexOf(currentQuestionIndex);
+                if (reattemptIndex > -1) {
+                    questionsToReattempt.splice(reattemptIndex, 1);
+                }
+
+            } else {
+                feedbackMessage.textContent = 'Неправильно. Правильный ответ: ' + currentQuestion.correctAnswer;
+                feedbackMessage.className = 'feedback incorrect';
+                // Add to reattempt list if not already there
+                if (!questionsToReattempt.includes(currentQuestionIndex)) {
+                    questionsToReattempt.push(currentQuestionIndex);
+                }
+                // Highlight the incorrect chosen answer in red
+                selectedOption.parentElement.classList.add('incorrect');
+                // Highlight the correct answer in green
+                optionsListItems.forEach(li => {
+                    if (li.querySelector('input').value === currentQuestion.correctAnswer) {
+                        li.classList.add('correct');
+                    }
+                });
+                nextBtn.disabled = false; // Still enable next button to allow progression
+            }
+            updateProgress();
+        }
+
+        function goToNextQuestion() {
+            if (!quizActive) return;
+
+            let nextIndex = currentQuestionIndex + 1;
+            let foundNext = false;
+
+            // First, try to find the next unanswered question in the *initial shuffled sequence*
+            while (nextIndex < shuffledQuizData.length) {
+                if (!shuffledQuizData[nextIndex].answeredCorrectly) {
+                    currentQuestionIndex = nextIndex;
+                    foundNext = true;
+                    break;
+                }
+                nextIndex++;
+            }
+
+            // If no more initial questions are unanswered, check the reattempt list
+            if (!foundNext) {
+                // Filter out questions that have since been answered correctly
+                questionsToReattempt = questionsToReattempt.filter(qIndex => !shuffledQuizData[qIndex].answeredCorrectly);
+                
+                if (questionsToReattempt.length > 0) {
+                    // Sort reattempt questions to ensure consistent progression through them if desired
+                    questionsToReattempt.sort((a, b) => a - b);
+                    currentQuestionIndex = questionsToReattempt[0]; // Take the first one from reattempt list
+                    foundNext = true;
+                }
+            }
+
+            if (foundNext) {
+                displayQuestion();
+            } else {
+                // All questions, including reattempts, are answered correctly
+                questionArea.style.display = 'none';
+                progressIndicator.style.display = 'none';
+                completionMessage.style.display = 'block';
+                quizActive = false;
+            }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Event Listener for Next button
+        nextBtn.addEventListener('click', goToNextQuestion);
+
+        // Initialize quiz
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reset answered status for all questions at the start
+            quizData.forEach(q => q.answeredCorrectly = false);
+            shuffledQuizData = [...quizData]; // Create a copy to shuffle
+            shuffleArray(shuffledQuizData);
+            currentQuestionIndex = 0; // Start from the beginning of the shuffled set
+            questionsToReattempt = []; // Ensure this is empty at start
+            quizActive = true;
+            displayQuestion();
+        });
+    </script>
+</body>
+</html>
